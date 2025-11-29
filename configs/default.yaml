@@ -1,0 +1,134 @@
+# H-MTL Configuration File
+# Hierarchical Severity-Aware Multi-Task Learning
+# For Semiconductor Transfer Robot Fault Diagnosis
+
+# ============================================
+# Model Configuration
+# ============================================
+model:
+  hidden_dim: 128              # Hidden dimension
+  num_iterations: 3            # IKR iterations (K)
+  input_seq_len: 780           # Input sequence length
+  input_channels: 2            # Vibration channels (x, y)
+  num_main_classes: 3          # Main task classes (Normal, Tension, Wear)
+  num_severity_levels: 3       # Severity levels per fault type (Light, Medium, Severe)
+
+# ============================================
+# Training Configuration
+# ============================================
+train:
+  epochs: 300                  # Number of training epochs
+  batch_size: 64               # Batch size
+  learning_rate: 1.0e-3        # Learning rate (0.001)
+  weight_decay: 1.0e-4         # L2 regularization (0.0001)
+  optimizer: adam              # Optimizer type
+  scheduler: cosine            # Learning rate scheduler
+  num_workers: 4               # DataLoader workers
+  device: cuda                 # cuda or cpu
+  random_seed: 42              # Random seed for reproducibility
+  early_stopping: false        # Enable early stopping
+  early_stopping_patience: 50  # Patience for early stopping
+
+# ============================================
+# Loss Weights (Equation 7 in paper)
+# ============================================
+loss:
+  lambda_task: 1.0             # Weight for task loss (L_task)
+  lambda_struct: 0.7           # Weight for structural loss (L_struct) - EMD
+  lambda_aux: 0.3              # Weight for auxiliary loss (L_aux)
+
+# ============================================
+# Data Configuration
+# ============================================
+data:
+  train_split: 0.8             # Train/test split ratio
+  seq_len: 780                 # Sequence length (time steps)
+  num_classes: 3               # Number of main classes
+  num_severity_levels: 3       # Severity levels per fault type
+  sampling_rate: 25600         # Hz (25.6 kHz)
+  signal_duration: 7.8         # seconds per cycle
+  normalize: true              # Normalize input signals
+  normalization_method: standardization  # standardization or minmax
+
+# ============================================
+# Evaluation Metrics
+# ============================================
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score
+    - acr                      # Adjacent Confusion Rate
+    - confusion_matrix
+  print_frequency: 5           # Print every N epochs
+  save_results: true
+  save_figures: true
+
+# ============================================
+# File Paths
+# ============================================
+paths:
+  data_dir: "./data/robot_dataset"
+  model_save_dir: "./models"
+  result_save_dir: "./results"
+  log_dir: "./logs"
+
+# ============================================
+# Experimental Setup
+# ============================================
+experiment:
+  hardware: "NVIDIA RTX 4070 Ti Super"
+  vram: 16                     # GB
+  cpu: "Intel Core i9-9900"
+  precision: 32                # bit (float32)
+  framework: pytorch           # Deep learning framework
+  framework_version: "2.0+"
+
+# ============================================
+# Main Task Classes
+# ============================================
+main_task:
+  - class: 0
+    name: "Normal"
+    description: "Normal operation, no degradation"
+  
+  - class: 1
+    name: "Tension Reduction"
+    description: "Belt tension loss due to wear"
+    severity_levels:
+      - 0: "Light Tension Loss"
+      - 1: "Medium Tension Loss"
+      - 2: "Severe Tension Loss"
+  
+  - class: 2
+    name: "Wear Progression"
+    description: "Belt surface wear"
+    severity_levels:
+      - 0: "Light Wear"
+      - 1: "Medium Wear"
+      - 2: "Severe Wear"
+
+# ============================================
+# SPF Module Settings
+# ============================================
+spf:
+  embedding_dim: 32            # Severity embedding dimension
+  num_severity_levels: 3       # Number of severity levels
+
+# ============================================
+# IKR Module Settings
+# ============================================
+ikr:
+  num_iterations: 3            # K iterations for knowledge refinement
+  num_heads: 2                 # Multi-head attention heads
+  dropout: 0.1                 # Dropout rate
+
+# ============================================
+# Loss Function Settings
+# ============================================
+loss_config:
+  emd_num_classes: 3           # Number of classes for EMD loss
+  cross_entropy_weight: 1.0    # Cross-entropy loss weight
+  emd_weight: 0.7              # EMD ordinal loss weight
+  mse_weight: 0.3              # MSE auxiliary loss weight
